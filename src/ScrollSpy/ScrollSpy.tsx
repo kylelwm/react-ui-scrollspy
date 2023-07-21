@@ -1,11 +1,5 @@
 import * as React from "react";
-import {
-  MutableRefObject,
-  ReactNode,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import { MutableRefObject, ReactNode, useEffect, useRef } from "react";
 import { throttle } from "../utils/throttle";
 
 interface ScrollSpyProps {
@@ -58,33 +52,10 @@ const ScrollSpy = ({
   updateHistoryStack = true,
 }: ScrollSpyProps) => {
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
-  const [navContainerItems, setNavContainerItems] = useState<NodeListOf<Element> | undefined>(); // prettier-ignore
 
   // keeps track of the Id in navcontainer which is active
   // so as to not update classLists unless it has been updated
   const prevIdTracker = useRef("");
-
-  // To get the nav container items depending on whether the parent ref for the nav container is passed or not
-  useEffect(() => {
-    navContainerRef
-      ? setNavContainerItems(
-          navContainerRef.current?.querySelectorAll(
-            `[data-${useDataAttribute}]`
-          )
-        )
-      : setNavContainerItems(
-          document.querySelectorAll(`[data-${useDataAttribute}]`)
-        );
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [navContainerRef]);
-
-  // fire once after nav container items are set
-  useEffect(() => {
-    checkAndUpdateActiveScrollSpy();
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [navContainerItems]);
 
   const isVisible = (el: HTMLElement) => {
     const rectInView = el.getBoundingClientRect();
@@ -119,6 +90,10 @@ const ScrollSpy = ({
   };
 
   const checkAndUpdateActiveScrollSpy = () => {
+    const navContainerItems = navContainerRef
+      ? navContainerRef.current?.querySelectorAll(`[data-${useDataAttribute}]`)
+      : document.querySelectorAll(`[data-${useDataAttribute}]`);
+
     const scrollParentContainer = scrollContainerRef.current;
 
     // if there are no children, return
@@ -188,6 +163,18 @@ const ScrollSpy = ({
           "scroll",
           throttle(checkAndUpdateActiveScrollSpy, scrollThrottle)
         );
+    return () => {
+      // remove event listener
+      parentScrollContainerRef
+        ? parentScrollContainerRef.current?.removeEventListener(
+            "scroll",
+            throttle(checkAndUpdateActiveScrollSpy, scrollThrottle)
+          )
+        : window.removeEventListener(
+            "scroll",
+            throttle(checkAndUpdateActiveScrollSpy, scrollThrottle)
+          );
+    };
   });
 
   return <div ref={scrollContainerRef}>{children}</div>;

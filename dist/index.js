@@ -54,23 +54,9 @@ var ScrollSpy = function (_a) {
     // customize attributes
     useDataAttribute = _e === void 0 ? "to-scrollspy-id" : _e, _f = _a.activeClass, activeClass = _f === void 0 ? "active-scroll-spy" : _f, _g = _a.useBoxMethod, useBoxMethod = _g === void 0 ? true : _g, _h = _a.updateHistoryStack, updateHistoryStack = _h === void 0 ? true : _h;
     var scrollContainerRef = React.useRef(null);
-    var _j = React.useState(), navContainerItems = _j[0], setNavContainerItems = _j[1]; // prettier-ignore
     // keeps track of the Id in navcontainer which is active
     // so as to not update classLists unless it has been updated
     var prevIdTracker = React.useRef("");
-    // To get the nav container items depending on whether the parent ref for the nav container is passed or not
-    React.useEffect(function () {
-        var _a;
-        navContainerRef
-            ? setNavContainerItems((_a = navContainerRef.current) === null || _a === void 0 ? void 0 : _a.querySelectorAll("[data-".concat(useDataAttribute, "]")))
-            : setNavContainerItems(document.querySelectorAll("[data-".concat(useDataAttribute, "]")));
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [navContainerRef]);
-    // fire once after nav container items are set
-    React.useEffect(function () {
-        checkAndUpdateActiveScrollSpy();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [navContainerItems]);
     var isVisible = function (el) {
         var rectInView = el.getBoundingClientRect();
         if (useBoxMethod) {
@@ -96,6 +82,10 @@ var ScrollSpy = function (_a) {
         }
     };
     var checkAndUpdateActiveScrollSpy = function () {
+        var _a;
+        var navContainerItems = navContainerRef
+            ? (_a = navContainerRef.current) === null || _a === void 0 ? void 0 : _a.querySelectorAll("[data-".concat(useDataAttribute, "]"))
+            : document.querySelectorAll("[data-".concat(useDataAttribute, "]"));
         var scrollParentContainer = scrollContainerRef.current;
         // if there are no children, return
         if (!(scrollParentContainer && navContainerItems))
@@ -152,6 +142,13 @@ var ScrollSpy = function (_a) {
                 (_a = parentScrollContainerRef.current) === null || _a === void 0 ? void 0 : _a.addEventListener("scroll", throttle(checkAndUpdateActiveScrollSpy, scrollThrottle))
             : // else listen for scroll in window
                 window.addEventListener("scroll", throttle(checkAndUpdateActiveScrollSpy, scrollThrottle));
+        return function () {
+            var _a;
+            // remove event listener
+            parentScrollContainerRef
+                ? (_a = parentScrollContainerRef.current) === null || _a === void 0 ? void 0 : _a.removeEventListener("scroll", throttle(checkAndUpdateActiveScrollSpy, scrollThrottle))
+                : window.removeEventListener("scroll", throttle(checkAndUpdateActiveScrollSpy, scrollThrottle));
+        };
     });
     return React__namespace.createElement("div", { ref: scrollContainerRef }, children);
 };
